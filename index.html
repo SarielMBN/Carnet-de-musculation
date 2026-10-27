@@ -288,7 +288,7 @@ textarea.input { resize: vertical; min-height: 84px; }
   position: fixed; z-index: 40; left: 0; right: 0; bottom: 0;
   padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
 }
-.nav-in { max-width: 620px; margin: 0 auto; height: var(--nav-h); background: #fff; border-radius: 24px; box-shadow: 0 18px 40px -14px rgba(40, 0, 4, .6); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 6px; gap: 4px; }
+.nav-in { max-width: 620px; margin: 0 auto; height: var(--nav-h); background: #fff; border-radius: 24px; box-shadow: 0 18px 40px -14px rgba(40, 0, 4, .6); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 6px; gap: 4px; }
 .nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border-radius: 18px; color: var(--muted); text-decoration: none; font-size: 11px; font-weight: 600; transition: background .3s var(--ease), color .3s; }
 .nav a:hover { color: var(--ink); }
 .nav a.on { background: var(--ink); color: #fff; }
@@ -360,6 +360,35 @@ td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
 .coach-form { border: 1.5px solid var(--line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .disclaimer { color: var(--on-red-2); font-size: 12px; text-align: center; max-width: 52ch; align-self: center; }
 
+/* Exemple d'exercice : deux photos en fondu enchaîné */
+.demo-wrap { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.demo { position: relative; aspect-ratio: 3 / 2; max-width: 100%; border-radius: 18px; overflow: hidden; background: #F1EDED; cursor: pointer; }
+/* une image par exercice : départ à gauche, arrivée à droite (480×320 chacune) */
+.demo .f { position: absolute; inset: 0; background-size: 200% 100%; background-repeat: no-repeat; }
+.demo .f.a { background-position: 0 0; }
+.demo .f.b { background-position: 100% 0; animation: demoSwap 2.4s ease-in-out infinite; }
+.demo.paused .f.b { animation-play-state: paused; }
+@keyframes demoSwap { 0%, 35% { opacity: 0; } 50%, 85% { opacity: 1; } 100% { opacity: 0; } }
+.demo-pause { position: absolute; right: 10px; bottom: 10px; width: 38px; height: 38px; border-radius: 50%; background: rgba(17, 17, 17, .75); color: #fff; display: grid; place-items: center; opacity: 0; transition: opacity .2s; }
+.demo.paused .demo-pause { opacity: 1; }
+a.btn { text-decoration: none; }
+
+/* Écran d'accueil verrouillé */
+.lock {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; overflow-y: auto;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
+  color: #fff; background: radial-gradient(110% 55% at 0% 0%, rgba(255, 90, 90, .3) 0%, transparent 60%), linear-gradient(172deg, var(--red-top) 0%, var(--red) 45%, var(--red-low) 100%);
+  animation: fade .3s both; transition: opacity .3s;
+}
+.lock.out { opacity: 0; }
+.lock-in { width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.lock-logo { width: 88px; height: 88px; border-radius: 28px; background: #fff; color: var(--red); display: grid; place-items: center; margin-bottom: 14px; box-shadow: 0 20px 40px -16px rgba(0, 0, 0, .55); animation: rise .5s var(--ease) both; }
+.lock-logo svg.i { width: 46px; height: 46px; }
+.lock h1 { font-size: 36px; }
+.lock-actions { width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 26px; }
+.link-light { background: none; border: 0; color: #fff; opacity: .85; font: 600 14px var(--f-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 8px; }
+.lock-err { min-height: 22px; font-weight: 600; font-size: 14px; }
+
 .toast {
   position: fixed; z-index: 70; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px));
   transform: translateX(-50%); max-width: calc(100% - 32px);
@@ -397,6 +426,7 @@ img { max-width: 100%; }
 <div id="sheet-root"></div>
 <div id="flash"></div>
 <div id="toast-root"></div>
+<div id="lock-root"></div>
 
 <script>
 "use strict";
@@ -404,6 +434,7 @@ img { max-width: 100%; }
 /* =========================================================================
    1. OUTILS
    ========================================================================= */
+const STANDALONE = true; // true dans la version GitHub : pas de coach IA, verrouillage Face ID, données sur l'appareil
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const LS = {
@@ -458,7 +489,11 @@ const ICONS = {
   swap: "M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7",
   download: "M12 4v11M7 10l5 5 5-5M5 20h14",
   upload: "M12 20V9M7 14l5-5 5 5M5 4h14",
-  minus: "M5 12h14"
+  minus: "M5 12h14",
+  film: "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18zM10 8.5v7l5.5-3.5z",
+  external: "M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5",
+  faceid: "M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M9 9.5v1M15 9.5v1M12 9.5v3.5h-1M9.5 16c1.5 1 3.5 1 5 0",
+  lock: "M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3"
 };
 const ic = (n, s) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true"${s ? ` style="width:${s}px;height:${s}px"` : ""}><path d="${ICONS[n]}"/></svg>`;
 
@@ -548,6 +583,8 @@ const CATALOG = [
 ];
 // Noms utilisés dans la première version de l'appli
 const ALIASES = { "tirage horizontal": "cable_row", "curl barre": "ez_curl", "relevés de jambes": "hanging_raise", "releves de jambes": "hanging_raise" };
+// Photos de démonstration (départ / arrivée) : Free Exercise DB, domaine public (github.com/yuhonas/free-exercise-db)
+const DEMOS = new Set(["ab_wheel", "arm_circles", "bench", "bike_int", "bulgarian", "bw_squat", "cable_crunch", "cable_fly", "cable_row", "calf_seated", "calf_stand", "cat_cow", "chair_dips", "chest_press", "child", "crunch", "db_bench", "db_curl", "db_press", "db_row", "dead_bug", "deadlift", "dips", "ez_curl", "face_pull", "foam", "glute_bridge_sl", "hammer", "hamstring", "hanging_raise", "hip_flexor", "hip_thrust", "incline_db", "inv_row", "jump_squat", "lat_pd", "lat_raise", "leg_curl", "leg_ext", "leg_press", "lunges", "machine_crunch", "machine_press", "machine_row", "mountain", "ohp", "pallof", "pec_deck", "plank", "pullup", "pushdown", "pushup", "rdl", "rear_delt", "row", "side_plank", "skull", "squat", "steady", "walking_lunge"]);
 const OLD_GROUP = { "Jambes": "Quadriceps", "Bras": "Biceps", "Pectoraux": "Pectoraux", "Dos": "Dos", "Épaules": "Épaules", "Abdos": "Abdos" };
 
 /* =========================================================================
@@ -760,7 +797,7 @@ function weekStats(fromISO) {
 /* =========================================================================
    6. ÉTAT DE L'INTERFACE ET NAVIGATION
    ========================================================================= */
-const TABS = [["accueil", "Accueil", "home"], ["seances", "Séances", "dumbbell"], ["progres", "Progrès", "chart"], ["plus", "Plus", "grid"]];
+const TABS = [["accueil", "Accueil", "home"], ["seances", "Séances", "dumbbell"], ["progres", "Progrès", "chart"], ["coach", "Coach", "chat"], ["plus", "Plus", "grid"]].filter((t) => !(STANDALONE && t[0] === "coach"));
 const TAB_OF = { accueil: "accueil", seances: "seances", seance: "seances", editeur: "seances", progres: "progres", coach: "coach", plus: "plus", biblio: "plus", corps: "plus", outils: "plus", reglages: "plus", run: "" };
 const UI = {
   view: "accueil", tplId: null, editor: null, tplQuery: "", libQuery: "", libMuscle: "Tous",
@@ -794,6 +831,7 @@ function render(anim = "fade") {
   const tab = TAB_OF[UI.view];
   $("#nav").hidden = UI.view === "run";
   $("#app").classList.toggle("running", UI.view === "run");
+  $("#nav-in").style.gridTemplateColumns = `repeat(${TABS.length}, minmax(0, 1fr))`;
   $("#nav-in").innerHTML = TABS.map(([id, label, icon]) => `<a href="#${id}" data-act="tab" data-v="${id}" class="${tab === id ? "on" : ""}" ${tab === id ? 'aria-current="page"' : ""}>${ic(icon)}<span>${label}</span></a>`).join("");
   updateLive(); renderRest();
   if (UI.view === "coach") afterCoachRender();
@@ -871,7 +909,7 @@ function tplListHTML() {
   const match = (t) => !q || norm(`${t.name} ${t.desc} ${t.cat || ""} ${t.exercises.map((e) => getEx(e.exId).name).join(" ")}`).includes(q);
   const mine = D().templates.filter(match);
   let h = `<section class="sec"><div class="sec-head"><h2>Mes séances</h2><button class="btn btn-light btn-sm" data-act="new-tpl">${ic("plus")}Créer</button></div>
-    ${mine.length ? `<div class="stack">${mine.map(tplCard).join("")}</div>` : q ? "" : `<div class="empty-red">Duplique une séance ci-dessous ou crée la tienne.</div>`}</section>`;
+    ${mine.length ? `<div class="stack">${mine.map(tplCard).join("")}</div>` : q ? "" : `<div class="empty-red">${STANDALONE ? "Duplique une séance ci-dessous ou crée la tienne." : "Duplique une séance ci-dessous, demande-en une au coach, ou crée la tienne."}</div>`}</section>`;
   let any = mine.length > 0;
   for (const c of CATS) {
     const list = BUILTIN.filter((t) => t.cat === c && match(t)); if (!list.length) continue; any = true;
@@ -903,6 +941,7 @@ VIEWS.seance = () => {
         <div><h3>${esc(E.name)}</h3><p class="meta"><span><b style="color:var(--text)">${e.sets} × ${esc(tgt(e.target, E.type))}</b></span><span>${ic("clock", 14)} ${fmtRest(e.rest)}</span><span>${esc(E.m)}</span></p></div>
         ${E.cue ? `<p class="small muted">${esc(E.cue)}</p>` : ""}
         ${e.note ? `<p class="small" style="color:var(--red);font-weight:500">${esc(e.note)}</p>` : ""}
+        <button class="btn btn-quiet btn-sm" data-act="demo" data-id="${esc(e.exId)}" style="align-self:flex-start">${ic("film")}Voir l'exemple</button>
       </div></div>`; }).join("")}
   </div>
   ${!t.builtin ? (del
@@ -989,6 +1028,7 @@ function runCard(ex, i) {
       <button class="btn btn-quiet btn-sm" data-act="run-addset" data-i="${i}">${ic("plus")}Série</button>
       ${ex.sets.length > 1 ? `<button class="btn btn-quiet btn-sm" data-act="run-rmset" data-i="${i}">${ic("minus")}Série</button>` : ""}
       <button class="btn btn-quiet btn-sm" data-act="run-rest" data-i="${i}">${ic("clock")}Repos</button>
+      <button class="btn btn-quiet btn-sm" data-act="demo" data-id="${esc(ex.exId)}">${ic("film")}Exemple</button>
     </div>
     ${ex.showNote || ex.note ? `<label class="field"><span>Note sur l'exercice</span><input class="input" id="rn-${i}" data-in="run-exnote" data-i="${i}" value="${esc(ex.note)}" placeholder="Réglage machine, sensation, douleur…" maxlength="200"></label>` : ""}
   </div>`;
@@ -1151,7 +1191,7 @@ VIEWS.corps = () => {
     <div class="grow"><p style="font-weight:600">${esc(fmtDate(b.date, { weekday: "short", day: "numeric", month: "long", year: "numeric" }))}</p>
     <p class="small muted">${[b.weight > 0 ? `${fw(b.weight)} ${u}` : "", ...BODY_FIELDS.slice(1).filter(([k]) => b[k] > 0).map(([k, l]) => `${l} ${fmt(b[k])}`)].filter(Boolean).join(" · ")}</p></div>
     ${UI.confirm === "b:" + b.id ? `<button class="btn btn-danger btn-sm" data-act="body-del" data-id="${esc(b.id)}">Supprimer</button>` : `<button class="icon-btn" data-act="confirm" data-v="b:${esc(b.id)}" aria-label="Supprimer la mesure">${ic("trash")}</button>`}
-  </div>`).join("")}</div></div>` : emptyCard("Aucune mesure", "Enregistre ton poids aujourd'hui pour suivre son évolution.")}`;
+  </div>`).join("")}</div></div>` : emptyCard("Aucune mesure", STANDALONE ? "Enregistre ton poids aujourd'hui pour suivre son évolution." : "Enregistre ton poids aujourd'hui : le coach s'en servira pour ses conseils de nutrition.")}`;
 };
 
 /* ---------- Calculateurs ---------- */
@@ -1223,9 +1263,10 @@ VIEWS.reglages = () => {
       <label class="switch"><input type="checkbox" id="set-sound" data-ch="set-sound" ${s.sound ? "checked" : ""} aria-label="Son à la fin du repos"><span></span></label></div>
     <button class="btn btn-quiet btn-sm" data-act="test-sound" style="align-self:flex-start">Tester le son</button>
   </div>
+  ${STANDALONE ? lockCardHTML() : ""}
   <div class="card">
     <h2>Tes données</h2>
-    <p class="small muted">Enregistrées sur cet appareil, dans l'appli. Exporte-les régulièrement pour en garder une copie.</p>
+    <p class="small muted">${STANDALONE ? "Enregistrées sur cet appareil, dans l'appli. Exporte-les régulièrement pour en garder une copie." : Store.mode === "db" ? "Enregistrées dans ton compte claude.ai (privé), avec une copie sur cet appareil." : Store.mode === "local" ? "Enregistrées sur cet appareil uniquement. Exporte-les régulièrement." : "Connexion à ton compte…"}</p>
     <p class="small">${d.logs.length} séance${d.logs.length > 1 ? "s" : ""} · ${d.templates.length} séance${d.templates.length > 1 ? "s" : ""} perso · ${d.body.length} mesure${d.body.length > 1 ? "s" : ""}</p>
     <div class="row">
       <button class="btn grow" data-act="export">${ic("download")}Exporter (JSON)</button>
@@ -1285,6 +1326,7 @@ function logSheet(id, confirmDel) {
 function exSheet(id) {
   const X = getEx(id), rec = exRecord(id), h = exHistory(id).slice(-3).reverse();
   openSheet(`${sheetHead(X.name, `${esc(X.m)}${X.equip ? " · " + esc(X.equip) : ""}`)}
+    ${demoBlock(id)}
     ${X.cue ? `<p class="cue">${esc(X.cue)}</p>` : ""}
     ${rec ? `<div class="grid3"><div class="stat"><span class="v">${X.type === "reps" ? (rec.m.best?.w > 0 ? fw(rec.m.best.w) + `<small>${unit()}</small>` : rec.m.maxReps + "<small>reps</small>") : rec.m.maxT + `<small>${X.type === "time" ? "s" : "min"}</small>`}</span><span class="l">record</span></div>
       <div class="stat"><span class="v">${X.type === "reps" && rec.m.e1 ? fw(rec.m.e1) + `<small>${unit()}</small>` : "—"}</span><span class="l">1RM estimé</span></div>
@@ -1292,6 +1334,23 @@ function exSheet(id) {
       <div>${h.map((x) => `<div class="li"><div class="grow"><p class="small" style="font-weight:600">${esc(fmtDate(x.date))}</p><p class="small muted num">${esc(x.sets.map((s) => setTxt(s, X.type)).join(" · "))}</p></div></div>`).join("")}</div>
       <button class="btn" data-act="ex-progress" data-id="${esc(id)}">${ic("chart")}Voir la progression</button>` : `<p class="muted small">Tu n'as pas encore fait cet exercice.</p>`}
     ${X.custom && !String(id).startsWith("n:") ? `<button class="btn btn-quiet" data-act="ex-del" data-id="${esc(id)}">${ic("trash")}Supprimer cet exercice</button>` : ""}`);
+}
+function demoBlock(id) {
+  const X = getEx(id);
+  const yt = `<a class="btn btn-quiet btn-sm" style="align-self:flex-start" href="https://www.youtube.com/results?search_query=${encodeURIComponent(X.name + " exercice technique")}" target="_blank" rel="noopener">${ic("external")}Voir des vidéos sur YouTube</a>`;
+  if (!DEMOS.has(id)) return `<p class="cue">Pas d'animation pour cet exercice.</p>${yt}`;
+  return `<figure class="demo-wrap">
+      <div class="demo" data-act="demo-toggle" role="button" tabindex="0" aria-label="Mettre en pause ou relancer l'animation">
+        <span class="f a" style="background-image:url(exos/${id}.jpg)" role="img" aria-label="${esc(X.name)} : position de départ"></span>
+        <span class="f b" style="background-image:url(exos/${id}.jpg)" role="img" aria-label="${esc(X.name)} : position d'arrivée"></span>
+        <span class="demo-pause">${ic("play")}</span>
+      </div>
+      <figcaption class="small muted">Départ ↔ arrivée en boucle. Touche l'image pour mettre en pause. Photos : Free Exercise DB (domaine public).</figcaption>
+    </figure>${yt}`;
+}
+function demoSheet(id) {
+  const X = getEx(id);
+  openSheet(`${sheetHead(X.name, `${esc(X.m)}${X.equip ? " · " + esc(X.equip) : ""}`)}${demoBlock(id)}${X.cue ? `<p class="cue">${esc(X.cue)}</p>` : ""}`);
 }
 function pickerSheet() {
   openSheet(`${sheetHead("Ajouter un exercice", "")}
@@ -1651,6 +1710,8 @@ const ACT = {
   },
   "lib-muscle": (el) => { UI.libMuscle = el.dataset.v; $("#lib-chips").innerHTML = libChips(UI.libMuscle, "lib-muscle"); $("#lib-list").innerHTML = libListHTML(UI.libQuery, UI.libMuscle, "ex-info"); },
   "ex-info": (el) => exSheet(el.dataset.id),
+  demo: (el) => demoSheet(el.dataset.id),
+  "demo-toggle": (el) => el.classList.toggle("paused"),
   "ex-progress": (el) => { closeSheet(); UI.progEx = el.dataset.id; LS.set("cm2-progex", UI.progEx); go("progres", { set: { progTab: "graph" } }); },
   "ex-del": (el) => {
     const id = el.dataset.id;
@@ -1778,15 +1839,22 @@ document.addEventListener("submit", (ev) => {
 async function doExport() {
   const data = JSON.stringify({ app: "carnet-muscu", version: 2, exportedAt: new Date().toISOString(), docs: [...Store.docs.values()].map((d) => Store.clean(d)) }, null, 1);
   const name = `carnet-muscu-${todayISO()}.json`;
-  const file = new File([data], name, { type: "application/json" });
+  if (STANDALONE) {
+    const file = new File([data], name, { type: "application/json" });
+    try { // iPhone : feuille de partage → « Enregistrer dans Fichiers »
+      if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: "Sauvegarde Carnet de Muscu" }); return; }
+    } catch (e) { if (e?.name === "AbortError") return; }
+    const url = URL.createObjectURL(file), a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    toast("Fichier exporté"); return;
+  }
   try {
-    // Sur iPhone : feuille de partage → « Enregistrer dans Fichiers »
-    if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: "Sauvegarde Carnet de Muscu" }); return; }
-  } catch (e) { if (e?.name === "AbortError") return; }
-  const url = URL.createObjectURL(file), a = document.createElement("a");
-  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-  toast("Fichier exporté");
+    const dl = window.claude?.use ? await window.claude.use("downloads") : null;
+    if (dl) { await dl.save({ filename: name, data }); toast("Fichier exporté"); return; }
+  } catch (e) { if (e?.code === "declined") return; }
+  $("#export-out").innerHTML = `<p class="small muted">Le téléchargement n'est pas disponible ici. Copie ce texte et garde-le dans un fichier « ${esc(name)} ».</p><textarea class="input" readonly style="min-height:140px;font-size:12px" id="export-txt">${esc(data)}</textarea><button class="btn btn-quiet btn-sm" id="copy-export">Copier</button>`;
+  $("#copy-export").onclick = () => { const t = $("#export-txt"); navigator.clipboard?.writeText(t.value).then(() => toast("Copié"), () => { t.select(); toast("Texte sélectionné : copie-le."); }); };
 }
 function doImport(file) {
   if (!file) return;
@@ -1805,16 +1873,126 @@ function doImport(file) {
 }
 
 /* =========================================================================
-   13. DÉMARRAGE
+   13. VERROUILLAGE FACE ID (version GitHub uniquement)
+   Face ID passe par WebAuthn (clé d'accès liée à l'appareil). C'est un verrou
+   d'accès à l'écran : les données elles-mêmes ne sont pas chiffrées.
+   ========================================================================= */
+const rnd = (n) => crypto.getRandomValues(new Uint8Array(n));
+const b64 = (u8) => btoa(String.fromCharCode(...u8));
+const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const sha = async (txt) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+const RELOCK_MS = 5 * 60 * 1000;
+const Lock = {
+  cfg: LS.get("cm2-lock", null), ok: false, hiddenAt: 0, open: false,
+  async boot() {
+    try { this.ok = !!(window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); } catch { this.ok = false; }
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") this.hiddenAt = Date.now();
+      else if (this.cfg && !this.open && this.hiddenAt && Date.now() - this.hiddenAt > RELOCK_MS) this.show();
+    });
+    if (UI.view === "reglages") render("none");
+  },
+  show(mode = "welcome", err = "") {
+    this.open = true; document.body.style.overflow = "hidden";
+    const h = new Date().getHours();
+    $("#lock-root").innerHTML = `<div class="lock" role="dialog" aria-modal="true" aria-label="Appli verrouillée"><div class="lock-in">
+      <div class="lock-logo">${ic("dumbbell")}</div>
+      <p class="eyebrow">${esc(cap(new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })))}</p>
+      <h1>${h < 18 ? "Bonjour" : "Bonsoir"}</h1>
+      <p class="sub">Carnet de Muscu est verrouillé.</p>
+      ${mode === "pin"
+        ? `<form class="lock-actions" data-submit="lock-pin"><input class="input" id="lock-pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Code de secours" aria-label="Code de secours" style="text-align:center;letter-spacing:.3em">
+           <button class="btn btn-block" type="submit">Déverrouiller</button><button class="link-light" type="button" data-act="lock-faceid">Utiliser Face ID</button></form>`
+        : `<div class="lock-actions"><button class="btn btn-block" data-act="lock-faceid">${ic("faceid")}Déverrouiller avec Face ID</button><button class="link-light" data-act="lock-usepin">Utiliser mon code</button></div>`}
+      <p class="lock-err" role="alert">${esc(err)}</p>
+    </div></div>`;
+    if (mode === "pin") setTimeout(() => $("#lock-pin")?.focus(), 50);
+  },
+  hide() {
+    const el = $(".lock"); this.open = false; document.body.style.overflow = "";
+    if (!el) return; el.classList.add("out"); setTimeout(() => ($("#lock-root").innerHTML = ""), 300);
+  },
+  async faceId() {
+    try {
+      await navigator.credentials.get({ publicKey: { challenge: rnd(32), allowCredentials: [{ type: "public-key", id: unb64(this.cfg.id) }], userVerification: "required", timeout: 60000 } });
+      return true;
+    } catch { return false; }
+  },
+  async checkPin(pin) { return (await sha(this.cfg.salt + pin)) === this.cfg.pin; },
+  async enable(pin) {
+    const cred = await navigator.credentials.create({ publicKey: {
+      challenge: rnd(32), rp: { name: "Carnet de Muscu", id: location.hostname },
+      user: { id: rnd(16), name: "Carnet de Muscu", displayName: "Carnet de Muscu" },
+      pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+      authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required", residentKey: "preferred" },
+      timeout: 60000, attestation: "none" } });
+    const salt = b64(rnd(16));
+    this.cfg = { id: b64(new Uint8Array(cred.rawId)), salt, pin: await sha(salt + pin) };
+    LS.set("cm2-lock", this.cfg);
+  },
+  disable() { this.cfg = null; LS.del("cm2-lock"); }
+};
+function lockCardHTML() {
+  return `<div class="card"><div class="row"><div class="icon-circle">${ic("faceid")}</div>
+    <div class="grow"><p style="font-weight:600">Verrouillage Face ID</p>
+    <p class="small muted">${Lock.cfg ? "Activé : Face ID est demandé à l'ouverture et après 5 min hors de l'appli." : Lock.ok ? "Un écran d'accueil demande Face ID à chaque ouverture de l'appli." : "Face ID n'est pas disponible sur cet appareil ou ce navigateur."}</p></div>
+    ${Lock.cfg ? `<button class="btn btn-quiet btn-sm" data-act="lock-off">Désactiver</button>` : Lock.ok ? `<button class="btn btn-sm" data-act="lock-on">Activer</button>` : ""}</div></div>`;
+}
+function lockOnSheet() {
+  openSheet(`${sheetHead("Activer Face ID", "")}
+    <p class="small muted">À chaque ouverture, l'appli affichera un écran d'accueil et demandera Face ID. Choisis aussi un <b>code de secours</b> (4 à 8 chiffres) au cas où Face ID ne fonctionne pas. Ne l'oublie pas : sans Face ID ni code, il faudrait réinstaller l'appli.</p>
+    <form class="stack" data-submit="lock-enable">
+      <label class="field"><span>Code de secours</span><input class="input" id="lk-1" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" required></label>
+      <label class="field"><span>Confirme le code</span><input class="input" id="lk-2" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8" required></label>
+      <button class="btn" type="submit">${ic("faceid")}Activer Face ID</button>
+    </form>
+    <p class="small muted">L'iPhone va proposer d'enregistrer une « clé d'accès » pour ce site : accepte-la, c'est elle qui permet Face ID. Ce verrou protège l'accès à l'écran, il ne chiffre pas les données.</p>`);
+}
+function lockOffSheet(err = "") {
+  openSheet(`${sheetHead("Désactiver Face ID", "Confirme que c'est bien toi.")}
+    <button class="btn" data-act="lock-off-faceid">${ic("faceid")}Confirmer avec Face ID</button>
+    <form class="stack" data-submit="lock-off-pin">
+      <label class="field"><span>Ou avec ton code de secours</span><input class="input" id="lk-off" type="password" inputmode="numeric" autocomplete="off" maxlength="8"></label>
+      <button class="btn btn-quiet" type="submit">Valider le code</button>
+    </form>
+    ${err ? `<p class="small" style="color:var(--red);font-weight:600">${esc(err)}</p>` : ""}`);
+}
+Object.assign(ACT, {
+  "lock-faceid": async () => { if (await Lock.faceId()) Lock.hide(); else Lock.show("welcome", "Face ID n'a pas abouti. Réessaie ou utilise ton code."); },
+  "lock-usepin": () => Lock.show("pin"),
+  "lock-on": () => lockOnSheet(),
+  "lock-off": () => lockOffSheet(),
+  "lock-off-faceid": async () => { if (await Lock.faceId()) { Lock.disable(); closeSheet(); toast("Verrouillage désactivé"); render("none"); } else lockOffSheet("Face ID n'a pas abouti."); }
+});
+document.addEventListener("submit", async (ev) => {
+  const k = ev.target.dataset.submit;
+  if (k === "lock-pin") { ev.preventDefault(); if (await Lock.checkPin($("#lock-pin").value)) Lock.hide(); else Lock.show("pin", "Code incorrect."); }
+  if (k === "lock-off-pin") { ev.preventDefault(); if (await Lock.checkPin($("#lk-off").value)) { Lock.disable(); closeSheet(); toast("Verrouillage désactivé"); render("none"); } else lockOffSheet("Code incorrect."); }
+  if (k === "lock-enable") {
+    ev.preventDefault();
+    const a = $("#lk-1").value, b = $("#lk-2").value;
+    if (!/^\d{4,8}$/.test(a)) { toast("Le code doit contenir 4 à 8 chiffres."); return; }
+    if (a !== b) { toast("Les deux codes ne sont pas identiques."); return; }
+    try { await Lock.enable(a); closeSheet(); toast("Face ID activé"); render("none"); }
+    catch { toast("Activation annulée ou impossible. Réessaie."); }
+  }
+});
+
+/* =========================================================================
+   14. DÉMARRAGE
    ========================================================================= */
 Store.boot();
+if (STANDALONE && Lock.cfg) Lock.show();
 const start = location.hash.slice(1);
 UI.view = TABS.some((t) => t[0] === start) ? start : "accueil";
 render("fade");
 if (A) keepAwake();
 Store.connect();
-if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
-navigator.storage?.persist?.().catch(() => {});
+if (STANDALONE) {
+  Lock.boot();
+  if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.storage?.persist?.().catch(() => {});
+}
 })();
 </script>
 </body>
