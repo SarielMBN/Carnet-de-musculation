@@ -1,16 +1,26 @@
 // Service worker : ouverture sans connexion et notifications.
 // Change le numéro de version après chaque mise à jour du site.
-const CACHE = "carnet-muscu-v9";
+const CACHE = "carnet-muscu-v13";
 const SHELL = [
   "./",
   "./index.html",
   "./coach.webp",
   "./coach-f.webp",
+  "./coach-thomas.webp",
+  "./coach-erika.webp",
+  "./coach-jade.webp",
+  "./coach-marc.webp",
+  "./coach-nina.webp",
+  "./coach-maya.webp",
+  "./coach-victor.webp",
+  "./logo.webp",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/apple-touch-icon.png",
   "./icons/favicon-64.png",
   "./fonts/fonts.css",
+  "./fonts/barlow-condensed-latin-600-normal.woff2",
+  "./fonts/barlow-condensed-latin-700-normal.woff2",
   "./fonts/inter-latin-400-normal.woff2",
   "./fonts/inter-latin-500-normal.woff2",
   "./fonts/inter-latin-600-normal.woff2",
