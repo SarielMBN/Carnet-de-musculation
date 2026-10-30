@@ -11,15 +11,15 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hustle">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="icon" type="image/png" href="icons/favicon-64.png">
-<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon-64.png">
+<link rel="stylesheet" href="fonts.css">
 <style>
 /* Mise en page : colonne centrée (620px max), fond clair, grandes cartes blanches très arrondies,
    photos en vedette, barre d'onglets noire flottante en pilule. Trois modes : clair (défaut), sombre, coloré.
    La couleur d'accent (--accent) se choisit dans Personnalisation. */
 :root {
-  --accent: #D9252C; --accent-2: #B71C22; --accent-ink: #FFFFFF; --accent-soft: color-mix(in srgb, var(--accent) 11%, transparent);
+  --accent: #161616; --accent-2: #000000; --accent-ink: #FFFFFF; --accent-soft: color-mix(in srgb, var(--accent) 11%, transparent);
   --bg: #F2F1EE; --bg-2: #ECEBE7; --surface: #FFFFFF; --surface-2: #F5F4F1; --surface-3: #ECEAE6;
   --text: #121212; --muted: #78736E; --line: #ECEAE6; --field-line: #E3E0DB; --field-bg: #FFFFFF;
   --head: #121212; --head-2: #78736E; --chip-line: #DDD9D3;
@@ -165,10 +165,11 @@ svg.i { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor;
 
 /* Images d'exercices (planches regroupées : départ / arrivée) */
 /* Photo recadrée sans déformation : l'image garde ses proportions 3:2 et remplit le cadre (comme object-fit: cover) */
-.ph { background-color: #EDEAE5; position: relative; overflow: hidden; isolation: isolate; container-type: size; }
-.ph::before { content: ""; position: absolute; z-index: -1; left: 50%; top: 50%; translate: -50% -50%; aspect-ratio: 3 / 2; width: max(100cqw, 150cqh);
-  background: var(--img) no-repeat; background-size: var(--bs) 100%; background-position: var(--bp) 0; }
-.thumb.ph::before { width: max(140cqw, 210cqh); top: 46%; }
+.ph { background-color: #EDEAE5; position: relative; overflow: hidden; z-index: 0; }
+/* Photo recadrée sans déformation (proportions 3:2 gardées), compatible avec tous les iPhone */
+.ph::before { content: ""; position: absolute; z-index: -1; left: 0; top: 50%; width: 100%; height: 0; padding-top: 66.667%; transform: translateY(-50%);
+  background-image: var(--img); background-repeat: no-repeat; background-size: var(--bs) 100%; background-position: var(--bp) 0; }
+.thumb.ph::before { left: 50%; top: 46%; width: 210%; height: 140%; padding-top: 0; transform: translate(-50%, -50%); }
 .mode-sombre .ph { background-color: #2A2A2E; }
 .thumb { width: 64px; height: 64px; border-radius: 18px; flex: none; overflow: hidden; }
 .thumb.ico { display: grid; place-items: center; background: var(--surface-2); color: var(--muted); }
@@ -450,8 +451,8 @@ button.trow { width: 100%; border: 0; font: inherit; color: var(--text); text-al
 .nav a span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .nav a svg.i { width: 24px; height: 24px; transition: transform .3s var(--ease); }
 .nav a.on { color: #fff; }
-.nav a.on svg.i { color: var(--accent); transform: translateY(-3px); }
-.nav a::after { content: ""; position: absolute; bottom: 10px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--accent); transform: scale(0); transition: transform .3s var(--ease); }
+.nav a.on svg.i { color: var(--accent-hi, var(--accent)); transform: translateY(-3px); }
+.nav a::after { content: ""; position: absolute; bottom: 10px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--accent-hi, var(--accent)); transform: scale(0); transition: transform .3s var(--ease); }
 .nav a.on::after { transform: scale(1); }
 .mode-sombre .nav-in { box-shadow: 0 0 0 1px #2a2a2f, 0 18px 40px -14px rgba(0, 0, 0, .9); }
 
@@ -607,6 +608,7 @@ td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
 .splash.out { opacity: 0; visibility: hidden; }
 .splash-logo { width: min(64vw, 280px); aspect-ratio: 1112 / 777; background: url("logo.webp") no-repeat center / contain; animation: splashIn .7s var(--ease) both; }
 .mode-sombre .splash-logo, .mode-couleur .splash-logo, .mode-sombre .big-logo, .mode-couleur .big-logo { filter: invert(1); }
+.card.dark .btn-accent { background: var(--accent-hi, var(--accent)); color: var(--accent-hi-ink, var(--accent-ink)); }
 .clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 @keyframes splashIn { from { opacity: 0; transform: scale(.86); } }
 .lock, .onb {
@@ -708,7 +710,9 @@ try {
 /* =========================================================================
    1. OUTILS
    ========================================================================= */
-const STANDALONE = true; // true dans la version GitHub : carte, notifications, Face ID, données sur l'appareil
+const STANDALONE = true;
+window.HUSTLE_VERSION = "v15"; // true dans la version GitHub : carte, notifications, Face ID, données sur l'appareil
+const IMG_DIR = STANDALONE ? "" : "exos/"; // version GitHub : toutes les images à la racine du dépôt
 // Serveur de notifications (Cloudflare) : rempli lors de son installation
 const PUSH = { server: "", vapidKey: "" };
 const CONTACT = "alexmabena@gmail.com";
@@ -1103,7 +1107,7 @@ function migrateV1Local() {
 /* =========================================================================
    5. DONNÉES DÉRIVÉES
    ========================================================================= */
-const DEFAULT_SETTINGS = { unit: "kg", rest: 90, sound: true, theme: "rouge", mode: "clair", bigText: false, anim: true, coach: true, coachTips: true, gymMode: false, waterGoal: 8, notifHour: 8 };
+const DEFAULT_SETTINGS = { unit: "kg", rest: 90, sound: true, theme: "noir", mode: "clair", bigText: false, anim: true, coach: true, coachTips: true, gymMode: false, waterGoal: 8, notifHour: 8 };
 const KG_LB = 2.20462;
 let derived = null, derivedVer = -1;
 function D() {
@@ -1239,8 +1243,8 @@ function prEvents(bigOnly = false) { // nombre de records battus dans tout l'his
 
 /* ---------- Apparence : mode (clair, sombre, coloré) et couleur d'accent ---------- */
 const THEMES = { // [nom, accent, accent foncé, accent en mode sombre]
+  noir: ["Noir", "#161616", "#000000", "#EDEDED"],
   rouge: ["Rouge", "#D9252C", "#B3141C", "#FF4B52"],
-  noir: ["Graphite", "#2B2B2E", "#111111", "#E9E9EC"],
   bleu: ["Bleu", "#2453D6", "#1A3C9E", "#6E93F0"],
   vert: ["Vert", "#178A4C", "#0F6236", "#45C07D"],
   violet: ["Violet", "#6D35C9", "#4E2296", "#A68BEB"],
@@ -1262,11 +1266,13 @@ const avatarHTML = (size = 40, src = profile().avatar, name = profile().name) =>
   ? `<span class="avatar" style="width:${size}px;height:${size}px;background-image:url(${src})" aria-hidden="true"></span>`
   : `<span class="avatar ini" style="width:${size}px;height:${size}px;font-size:${Math.round(size * .42)}px" aria-hidden="true">${esc((name || "").charAt(0).toUpperCase()) || ic("user", Math.round(size * .5))}</span>`;
 function applyTheme() {
-  const s = settings(), t = THEMES[s.theme] || THEMES.rouge, r = document.documentElement, mode = ["clair", "sombre", "couleur"].includes(s.mode) ? s.mode : "clair";
+  const s = settings(), t = THEMES[s.theme] || THEMES.noir, r = document.documentElement, mode = ["clair", "sombre", "couleur"].includes(s.mode) ? s.mode : "clair";
   const a = mode === "sombre" ? t[3] : t[1], a2 = mode === "sombre" ? t[1] : t[2];
   ["clair", "sombre", "couleur"].forEach((m) => r.classList.toggle("mode-" + m, m === mode));
   r.style.setProperty("--accent", a); r.style.setProperty("--accent-2", a2);
   r.style.setProperty("--accent-ink", mode === "sombre" && s.theme === "noir" ? "#111111" : "#FFFFFF");
+  const dark = s.theme === "noir" && mode !== "sombre"; // accent noir : blanc sur les fonds noirs
+  r.style.setProperty("--accent-hi", dark ? "#FFFFFF" : a); r.style.setProperty("--accent-hi-ink", dark ? "#111111" : "#FFFFFF");
   r.dataset.coach = coachId();
   LS.set("cm3-look", { mode, a, a2, coach: coachId() });
   r.classList.toggle("big-text", !!s.bigText); r.classList.toggle("no-anim", !s.anim);
@@ -1285,10 +1291,10 @@ const mdots = (ms) => `<span class="mdots" aria-hidden="true">${ms.slice(0, 5).m
 // hi : photo de couverture en haute définition si elle existe
 function phStyle(exId, frame = 0, hi = false) {
   const c = hi && COVER_IDX[DEMO_ALIAS[exId] || exId];
-  if (c) { const [atlas, slot, n] = c; return `--img:url(exos/c${atlas}.webp);--bs:${n * 100}%;--bp:${n > 1 ? slot / (n - 1) * 100 : 0}%`; }
+  if (c) { const [atlas, slot, n] = c; return `--img:url(${IMG_DIR}c${atlas}.webp);--bs:${n * 100}%;--bp:${n > 1 ? slot / (n - 1) * 100 : 0}%`; }
   const d = demoOf(exId); if (!d) return "";
   const [atlas, slot, n] = d, frames = n * 2;
-  return `--img:url(exos/a${atlas}.webp);--bs:${frames * 100}%;--bp:${(slot * 2 + frame) / (frames - 1) * 100}%`;
+  return `--img:url(${IMG_DIR}a${atlas}.webp);--bs:${frames * 100}%;--bp:${(slot * 2 + frame) / (frames - 1) * 100}%`;
 }
 const tplCover = (t) => t.cover && demoOf(t.cover) ? t.cover : (t.exercises.find((e) => demoOf(e.exId)) || {}).exId;
 
@@ -2145,7 +2151,9 @@ VIEWS.reglages = () => {
     ${toggleRow("set-sound", "Son à la fin du repos", "Sur iPhone, coupe le mode silencieux pour l'entendre.", s.sound, "set-sound")}
     <button class="btn btn-quiet btn-sm" data-act="test-sound" style="align-self:flex-start">Tester le son</button>
   </div>
-  ${STANDALONE ? notifCardHTML() + lockCardHTML() : ""}
+  ${STANDALONE ? notifCardHTML() + lockCardHTML() + `<div class="card"><div class="set-row"><div class="icon-circle">${ic("image")}</div>
+    <div class="grow"><p style="font-weight:600">Vérifier les images</p><p class="small muted">Contrôle que toutes les images sont bien en ligne et enregistrées pour fonctionner sans internet.</p></div>
+    <button class="btn btn-sm" data-act="check-files">Vérifier</button></div></div>` : ""}
   <div class="card">
     <h2>Tes données</h2>
     <p class="small muted">${STANDALONE ? "Enregistrées sur cet appareil, dans l'appli. Exporte-les régulièrement pour en garder une copie." : Store.mode === "db" ? "Enregistrées dans ton compte claude.ai (privé), avec une copie sur cet appareil." : Store.mode === "local" ? "Enregistrées sur cet appareil uniquement. Exporte-les régulièrement." : "Connexion à ton compte…"}</p>
@@ -2283,11 +2291,33 @@ function avatarSheet() {
     ${has ? `<button class="btn btn-quiet" data-act="avatar-del">${ic("trash")}Retirer la photo</button>` : ""}
     <p class="small muted">La première fois, l'iPhone te demande l'autorisation d'utiliser l'appareil photo. Tu peux la modifier dans Réglages → Safari → Appareil photo.</p>`);
 }
+// Liste des images de l'appli et vérification sur le site (version GitHub)
+const coachFile = (id) => id === "alex" ? "coach.webp" : id === "rose" ? "coach-f.webp" : `coach-${id}.webp`;
+function appFiles() {
+  const atl = (idx, p) => [...new Set(Object.values(idx).map((v) => v[0]))].sort((a, b) => a - b).map((n) => `${IMG_DIR}${p}${n}.webp`);
+  return ["logo.webp", ...Object.keys(COACHES).map(coachFile), ...atl(DEMO_IDX, "a"), ...atl(COVER_IDX, "c")];
+}
+async function checkFiles() {
+  toast("Vérification en cours…");
+  const files = appFiles(), t = Date.now();
+  const online = await Promise.all(files.map((f) => fetch(`${f}?check=${t}`, { cache: "no-store" }).then((r) => r.ok, () => null)));
+  const cache = await caches.open(CACHE_NAME()).catch(() => null);
+  const saved = await Promise.all(files.map((f) => cache ? cache.match(f).then((r) => !!r) : false));
+  const net = online.some((x) => x !== null), miss = files.filter((f, i) => online[i] === false);
+  const row = (f, i) => `<div class="li"><div class="grow"><p class="small" style="font-weight:600">${esc(f)}</p></div>
+    <span class="tag ${online[i] ? "ok" : ""}">${online[i] ? "En ligne" : online[i] === false ? "Manquant" : "?"}</span><span class="tag ${saved[i] ? "ok" : ""}">${saved[i] ? "Hors ligne ✓" : "Pas encore"}</span></div>`;
+  openSheet(`${sheetHead("Vérification des images", "")}
+    ${!net ? `<p class="cue">Pas de connexion : impossible de vérifier le site. Réessaie avec internet.</p>`
+      : miss.length ? `<p class="cue" style="color:var(--accent)"><b>${miss.length} fichier${miss.length > 1 ? "s manquent" : " manque"} sur ton site.</b> Envoie-les sur GitHub en respectant les dossiers : tous les fichiers vont <b>directement dans le dépôt</b>, sans dossier.</p>`
+      : `<p class="cue"><b>Tout est en ligne.</b> Si des images ne s'affichent pas, ferme complètement l'appli et rouvre-la.</p>`}
+    <div>${files.map(row).join("")}</div>`);
+}
+const CACHE_NAME = () => "carnet-muscu-" + (window.HUSTLE_VERSION || "");
 function demoBlock(id) {
   const X = getEx(id);
   const yt = `<a class="btn btn-quiet btn-sm" style="align-self:flex-start" href="https://www.youtube.com/results?search_query=${encodeURIComponent(X.name + " exercice technique")}" target="_blank" rel="noopener">${ic("external")}Voir des vidéos sur YouTube</a>`;
   if (!DEMOS.has(id)) return `<p class="cue">Pas d'animation pour cet exercice.</p>${yt}`;
-  const [atlas, slot, n] = demoOf(id), F = n * 2, st = `background-image:url(exos/a${atlas}.webp);--bs:${F * 100}%;--pa:${slot * 2 / (F - 1) * 100}%;--pb:${(slot * 2 + 1) / (F - 1) * 100}%`;
+  const [atlas, slot, n] = demoOf(id), F = n * 2, st = `background-image:url(${IMG_DIR}a${atlas}.webp);--bs:${F * 100}%;--pa:${slot * 2 / (F - 1) * 100}%;--pb:${(slot * 2 + 1) / (F - 1) * 100}%`;
   return `<figure class="demo-wrap">
       <div class="demo" style="${st}" data-act="demo-toggle" role="button" tabindex="0" aria-label="Mettre en pause ou relancer l'animation">
         <span class="f a" role="img" aria-label="${esc(X.name)} : position de départ"></span>
@@ -2531,7 +2561,7 @@ let shareBlob = null, shareUrl = null;
 function wrapText(x, text, maxW) { const words = String(text).split(" "), lines = []; let cur = ""; for (const w of words) { const t = cur ? cur + " " + w : w; if (x.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; } if (cur) lines.push(cur); return lines; }
 async function shareImage(card) {
   const c = document.createElement("canvas"); c.width = 1080; c.height = 1350;
-  const x = c.getContext("2d"), t0 = THEMES[settings().theme] || THEMES.rouge, th = [t0[0], t0[1], t0[1], t0[2]];
+  const x = c.getContext("2d"), t0 = THEMES[settings().theme] || THEMES.noir, th = [t0[0], t0[1], t0[1], t0[2]];
   try { await document.fonts?.ready; } catch {}
   const T = "Poppins, 'Avenir Next', sans-serif", B = "Inter, -apple-system, sans-serif";
   const grd = x.createLinearGradient(0, 0, 300, 1350); grd.addColorStop(0, th[2]); grd.addColorStop(.5, th[1]); grd.addColorStop(1, th[3]);
@@ -2648,8 +2678,8 @@ const Gyms = {
   loadLib() {
     if (window.L) return Promise.resolve();
     return new Promise((res, rej) => {
-      const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "vendor/leaflet/leaflet.css"; document.head.appendChild(css);
-      const s = document.createElement("script"); s.src = "vendor/leaflet/leaflet.js"; s.onload = res; s.onerror = rej; document.head.appendChild(s);
+      const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "leaflet.css"; document.head.appendChild(css);
+      const s = document.createElement("script"); s.src = "leaflet.js"; s.onload = res; s.onerror = rej; document.head.appendChild(s);
     });
   },
   msg(t) { const m = $("#map-msg"); if (m) { m.hidden = !t; m.textContent = t || ""; } },
@@ -3468,6 +3498,7 @@ const ACT = {
   "set-unit": (el) => { saveSettings({ unit: el.dataset.v }); toast(el.dataset.v === "kg" ? "Unité : kilogrammes" : "Unité : livres"); },
   "gym-mode": () => { saveSettings({ gymMode: !settings().gymMode }); render("none"); },
   "test-sound": () => { ensureAudio(); const s = settings().sound; if (!s) toast("Le son est coupé dans les réglages."); else beep("end"); },
+  "check-files": () => checkFiles().catch(() => toast("Vérification impossible.")),
   "copy-mail": () => { navigator.clipboard?.writeText(CONTACT).then(() => toast("Adresse copiée"), () => toast(CONTACT)); },
   export: () => doExport(),
   // séance en cours

@@ -19,15 +19,17 @@ Application web de suivi de musculation, installable sur iPhone comme une appli.
 - Écran d'accueil verrouillé par Face ID (optionnel, avec code de secours)
 - Notifications de motivation (nécessite le serveur d'envoi, voir plus bas)
 - Photo de profil (appareil photo ou galerie, reste sur le téléphone)
-- Personnalisation : affichage clair, sombre ou coloré, 6 couleurs, taille du texte, animations, coach
+- Personnalisation : affichage clair, sombre ou coloré, 6 couleurs (noir par défaut), taille du texte, animations, coach
 - kg / lb, export et import des données (JSON), fonctionne hors connexion
 
 Les données restent sur l'appareil. Aucune publicité, aucun traceur.
 
 ## Mettre en ligne avec GitHub Pages
 
+Tous les fichiers sont **à la racine**, sans dossier : on peut les envoyer depuis un ordinateur ou depuis l'iPhone.
+
 1. Crée un dépôt public sur github.com (par exemple `carnet-muscu`).
-2. Envoie tout le contenu de ce dossier à la racine du dépôt (`Add file` → `Upload files`).
+2. `Add file` → `Upload files`, sélectionne **tous les fichiers** de ce dossier, puis `Commit changes`.
 3. Va dans `Settings` → `Pages`, choisis `Deploy from a branch`, branche `main`, dossier `/ (root)`, puis `Save`.
 4. Après une à deux minutes, le site est en ligne à l'adresse `https://<ton-pseudo>.github.io/carnet-muscu/`.
 
@@ -39,7 +41,7 @@ Les données restent sur l'appareil. Aucune publicité, aucun traceur.
 ## Mettre à jour
 
 Envoie les fichiers modifiés dans le dépôt (ils remplacent les anciens), puis change le numéro
-de version dans `sw.js` (`carnet-muscu-v13` → `carnet-muscu-v14`) pour que les téléphones reçoivent
+de version dans `sw.js` (`carnet-muscu-v15` → `carnet-muscu-v16`) pour que les téléphones reçoivent
 la nouvelle version. Les données des utilisateurs ne sont pas touchées.
 
 **Important** : ne renomme jamais le dépôt et ne change pas l'adresse du site. Les données sont rangées
@@ -50,19 +52,23 @@ par le téléphone sous l'adresse exacte du site : une nouvelle adresse = un car
 Le fichier `index.html` contient une ligne `const PUSH = { server: "", vapidKey: "" };`.
 Elle sera remplie une fois le serveur d'envoi (Cloudflare) installé.
 
-## Fichiers
+## Fichiers (tous à la racine)
 
 | Fichier | Rôle |
 |---|---|
 | `index.html` | L'application complète (HTML, CSS, JavaScript) |
 | `coach*.webp` | Les 18 expressions de chacun des 9 coachs |
 | `logo.webp` | Le logo Hustle |
+| `a0.webp` à `a7.webp` | Images d'exemple des exercices (planches regroupées) |
+| `c0.webp` à `c5.webp` | Photos de couverture HD des programmes |
+| `apple-touch-icon.png`, `icon-*.png`, `favicon-64.png` | Icônes de l'appli (écran d'accueil, onglet) |
 | `manifest.webmanifest` | Nom, icône et couleurs de l'appli installée |
-| `sw.js` | Service worker : hors connexion et notifications |
-| `icons/` | Icônes de l'écran d'accueil |
-| `exos/` | Images d'exemple des exercices, regroupées en 8 planches (`a0.webp` à `a7.webp`) et photos de couverture HD des programmes (`c0.webp` à `c5.webp`) |
-| `fonts/` | Polices Inter, Poppins et Barlow Condensed, hébergées avec l'appli |
-| `vendor/leaflet/` | Librairie d'affichage de la carte |
+| `sw.js` | Service worker : tout fonctionne sans internet après la première ouverture, notifications |
+| `fonts.css`, `*.woff2` | Polices Inter, Poppins et Barlow Condensed |
+| `leaflet.js`, `leaflet.css` | Librairie d'affichage de la carte des salles |
+| `LICENSE-*.txt` | Licences des polices et de la carte |
+
+Dans l'appli, Plus → Réglages → **Vérifier les images** indique si un fichier manque sur le site.
 
 ## Crédits
 
