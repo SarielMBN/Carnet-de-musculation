@@ -1,6 +1,6 @@
 // Service worker : ouverture sans connexion et notifications.
 // Change le numéro de version après chaque mise à jour du site.
-const CACHE = "carnet-muscu-v15";
+const CACHE = "carnet-muscu-v16";
 const SHELL = [
   "./",
   "./index.html",

@@ -582,7 +582,7 @@ td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
 /* Exemple d'exercice : deux photos en fondu enchaîné */
 .demo-wrap { margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .demo { position: relative; aspect-ratio: 3 / 2; max-width: 100%; border-radius: 22px; overflow: hidden; background: #EDEAE5; cursor: pointer; }
-.demo .f { position: absolute; inset: 0; background-repeat: no-repeat; background-size: var(--bs) 100%; }
+.demo .f { position: absolute; inset: 0; background-image: var(--img); background-repeat: no-repeat; background-size: var(--bs) 100%; }
 .demo .f.a { background-position: var(--pa) 0; }
 .demo .f.b { background-position: var(--pb) 0; animation: demoSwap 2.4s ease-in-out infinite; }
 .demo.paused .f.b { animation-play-state: paused; }
@@ -711,7 +711,7 @@ try {
    1. OUTILS
    ========================================================================= */
 const STANDALONE = true;
-window.HUSTLE_VERSION = "v15"; // true dans la version GitHub : carte, notifications, Face ID, données sur l'appareil
+window.HUSTLE_VERSION = "v16"; // true dans la version GitHub : carte, notifications, Face ID, données sur l'appareil
 const IMG_DIR = STANDALONE ? "" : "exos/"; // version GitHub : toutes les images à la racine du dépôt
 // Serveur de notifications (Cloudflare) : rempli lors de son installation
 const PUSH = { server: "", vapidKey: "" };
@@ -2317,7 +2317,7 @@ function demoBlock(id) {
   const X = getEx(id);
   const yt = `<a class="btn btn-quiet btn-sm" style="align-self:flex-start" href="https://www.youtube.com/results?search_query=${encodeURIComponent(X.name + " exercice technique")}" target="_blank" rel="noopener">${ic("external")}Voir des vidéos sur YouTube</a>`;
   if (!DEMOS.has(id)) return `<p class="cue">Pas d'animation pour cet exercice.</p>${yt}`;
-  const [atlas, slot, n] = demoOf(id), F = n * 2, st = `background-image:url(${IMG_DIR}a${atlas}.webp);--bs:${F * 100}%;--pa:${slot * 2 / (F - 1) * 100}%;--pb:${(slot * 2 + 1) / (F - 1) * 100}%`;
+  const [atlas, slot, n] = demoOf(id), F = n * 2, st = `--img:url(${IMG_DIR}a${atlas}.webp);--bs:${F * 100}%;--pa:${slot * 2 / (F - 1) * 100}%;--pb:${(slot * 2 + 1) / (F - 1) * 100}%`;
   return `<figure class="demo-wrap">
       <div class="demo" style="${st}" data-act="demo-toggle" role="button" tabindex="0" aria-label="Mettre en pause ou relancer l'animation">
         <span class="f a" role="img" aria-label="${esc(X.name)} : position de départ"></span>

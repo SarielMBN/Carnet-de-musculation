@@ -41,7 +41,7 @@ Tous les fichiers sont **à la racine**, sans dossier : on peut les envoyer depu
 ## Mettre à jour
 
 Envoie les fichiers modifiés dans le dépôt (ils remplacent les anciens), puis change le numéro
-de version dans `sw.js` (`carnet-muscu-v15` → `carnet-muscu-v16`) pour que les téléphones reçoivent
+de version dans `sw.js` (`carnet-muscu-v16` → `carnet-muscu-v17`) pour que les téléphones reçoivent
 la nouvelle version. Les données des utilisateurs ne sont pas touchées.
 
 **Important** : ne renomme jamais le dépôt et ne change pas l'adresse du site. Les données sont rangées
